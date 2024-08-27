@@ -19,7 +19,7 @@ namespace C969App
                 var customerRepository = new CustomerRepository(dbContext);
                 var appointmentRepository = new AppointmentRepository(dbContext);
 
-                var loginForm = new LoginForm(userRepository, () => new MainForm(customerRepository, appointmentRepository));
+                var loginForm = new LoginForm(userRepository, () => new MainForm(customerRepository, appointmentRepository, userRepository));
                 Application.Run(loginForm);
             }
         }

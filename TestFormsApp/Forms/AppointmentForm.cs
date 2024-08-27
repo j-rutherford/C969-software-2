@@ -11,14 +11,25 @@ namespace C969App.Forms
     public partial class AppointmentForm : Form
     {
         private readonly AppointmentRepository _appointmentRepository;
+        private readonly CustomerRepository _customerRepository;
+        private readonly UserRepository _userRepository;
 
-        public AppointmentForm(AppointmentRepository appointmentRepository)
+        public AppointmentForm(
+            AppointmentRepository appointmentRepository,
+            CustomerRepository customerRepository,
+            UserRepository userRepository)
         {
             InitializeComponent();
             _appointmentRepository = appointmentRepository;
-            LoadAppointments();
-        }
+            _customerRepository = customerRepository;
+            _userRepository = userRepository;
 
+            this.Load += AppointmentForm_Load;
+        }
+        private void AppointmentForm_Load(object sender, EventArgs e)
+        {
+            LoadAppointments(); // Populate the DataGridView when the form loads
+        }
         private void LoadAppointments()
         {
             var dataTable = _appointmentRepository.GetAllAppointments();
@@ -48,8 +59,8 @@ namespace C969App.Forms
 
             // Set the visible columns
             dgvAppointments.Columns["AppointmentId"].Visible = true;
-            dgvAppointments.Columns["Customer.CustomerName"].Visible = true;
-            dgvAppointments.Columns["User.UserName"].Visible = true;
+            dgvAppointments.Columns["CustomerName"].Visible = true;
+            dgvAppointments.Columns["UserName"].Visible = true;
             dgvAppointments.Columns["Title"].Visible = true;
             dgvAppointments.Columns["Location"].Visible = true;
             dgvAppointments.Columns["Contact"].Visible = true;
@@ -61,27 +72,39 @@ namespace C969App.Forms
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            //var appointmentDetailForm = new AppointmentDetailForm(_appointmentRepository);
-            //appointmentDetailForm.ShowDialog();
-            //LoadAppointments();  // Refresh the list after adding
+            var appointmentDetailForm = new AppointmentDetailForm(_appointmentRepository, _customerRepository, _userRepository);
+            appointmentDetailForm.ShowDialog();
+
+            LoadAppointments(); // Refresh the appointment list after adding a new appointment
         }
+
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            //if (dgvAppointments.SelectedRows.Count > 0)
-            //{
-            //    var appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["AppointmentId"].Value);
-            //    var appointment = _appointmentRepository.GetAppointmentById(appointmentId);
+            if (dgvAppointments.SelectedRows.Count > 0)
+            {
+                var appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["AppointmentId"].Value);
+                var appointment = _appointmentRepository.GetAppointmentById(appointmentId);
 
-            //    var appointmentDetailForm = new AppointmentDetailForm(_appointmentRepository, appointment);
-            //    appointmentDetailForm.ShowDialog();
-            //    LoadAppointments();  // Refresh the list after editing
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Please select an appointment to edit.", "Edit Appointment", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //}
+                if (appointment != null)
+                {
+                    var appointmentDetailForm = new AppointmentDetailForm(_appointmentRepository, _customerRepository, _userRepository, appointment);
+                    appointmentDetailForm.ShowDialog();
+
+                    LoadAppointments(); // Refresh the appointment list after editing an appointment
+                }
+                else
+                {
+                    MessageBox.Show("Appointment not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select an appointment to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
+
+
 
         private void btnDelete_Click(object sender, EventArgs e)
         {

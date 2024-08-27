@@ -20,9 +20,11 @@ namespace C969App.Data
         public DataTable GetAllAppointments()
         {
             var dataTable = new DataTable();
-            var query = @"SELECT a.AppointmentId, c.CustomerName, u.UserName, 
-                         a.Title, a.Location, a.Contact, a.Type, 
-                         a.Start, a.End
+            var query = @"SELECT a.AppointmentId, a.CustomerId, a.UserId, 
+                         a.Title, a.Description, a.Location, a.Contact, 
+                         a.Type, a.Start, a.End, 
+                         a.CreateDate, a.CreatedBy, a.LastUpdate, a.LastUpdateBy,
+                         c.CustomerName, u.UserName 
                   FROM appointment a
                   INNER JOIN customer c ON a.CustomerId = c.CustomerId
                   INNER JOIN user u ON a.UserId = u.UserId";
@@ -32,6 +34,12 @@ namespace C969App.Data
                 dataAdapter.Fill(dataTable);
             }
 
+            foreach (DataRow row in dataTable.Rows)
+            {
+                row["Start"] = Convert.ToDateTime(row["Start"]).ToLocalTime();
+                row["End"] = Convert.ToDateTime(row["End"]).ToLocalTime();
+            }
+            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["AppointmentId"] };
             return dataTable;
         }
 
@@ -43,28 +51,42 @@ namespace C969App.Data
                 var allAppointments = GetAllAppointments();
                 var appointmentRow = allAppointments.Rows.Find(appointmentId);
 
-                var appointment = new Appointment()
-                {
-                    AppointmentId = (int)appointmentRow["AppointmentId"]
-                };
-
-                if (appointment == null)
+                if (appointmentRow == null)
                 {
                     throw new Exception($"Appointment with ID {appointmentId} not found.");
                 }
+
+                var appointment = new Appointment
+                {
+                    AppointmentId = (int)appointmentRow["AppointmentId"],
+                    CustomerId = (int)appointmentRow["CustomerId"],
+                    UserId = (int)appointmentRow["UserId"],
+                    Title = appointmentRow["Title"].ToString(),
+                    Description = appointmentRow["Description"].ToString(),
+                    Location = appointmentRow["Location"].ToString(),
+                    Contact = appointmentRow["Contact"].ToString(),
+                    Type = appointmentRow["Type"].ToString(),
+                    Start = (DateTime)appointmentRow["Start"],
+                    End = (DateTime)appointmentRow["End"],
+                    CreateDate = (DateTime)appointmentRow["CreateDate"],
+                    CreatedBy = appointmentRow["CreatedBy"].ToString(),
+                    LastUpdate = (DateTime)appointmentRow["LastUpdate"],
+                    LastUpdateBy = appointmentRow["LastUpdateBy"].ToString(),
+                };
 
                 return appointment;
             }
             catch (Exception ex)
             {
                 // Log or handle the exception as needed
-                MessageBox.Show($"Error fetching appointment: {ex.Message}");
+                MessageBox.Show($"Error fetching appointment: {ex.ToString()}");
                 return null;
             }
         }
         public void AddAppointment(Appointment appointment)
         {
-
+            try
+            {
                 var query = @"INSERT INTO appointment (CustomerId, UserId, Title, Description, Location, Contact, Type, Url, Start, End, CreateDate, CreatedBy, LastUpdate, LastUpdateBy) 
                               VALUES (@CustomerId, @UserId, @Title, @Description, @Location, @Contact, @Type, @Url, @Start, @End, @CreateDate, @CreatedBy, @LastUpdate, @LastUpdateBy)";
                 using (var command = new MySqlCommand(query, _context.Connection))
@@ -76,23 +98,29 @@ namespace C969App.Data
                     command.Parameters.AddWithValue("@Location", appointment.Location);
                     command.Parameters.AddWithValue("@Contact", appointment.Contact);
                     command.Parameters.AddWithValue("@Type", appointment.Type);
-                    command.Parameters.AddWithValue("@Url", appointment.Url);
+                    command.Parameters.AddWithValue("@Url", appointment.Url ?? "default-url.com");
                     command.Parameters.AddWithValue("@Start", appointment.Start);
                     command.Parameters.AddWithValue("@End", appointment.End);
                     command.Parameters.AddWithValue("@CreateDate", appointment.CreateDate);
-                    command.Parameters.AddWithValue("@CreatedBy", appointment.CreatedBy);
+                    command.Parameters.AddWithValue("@CreatedBy", appointment.CreatedBy ?? "default name");
                     command.Parameters.AddWithValue("@LastUpdate", appointment.LastUpdate);
-                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy);
+                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy ?? "default name");
 
                     command.ExecuteNonQuery();
                 }
             }
-        
+            catch (Exception ex)
+            {
+
+                MessageBox.Show("There was an issue saving that appointment. " + ex.ToString());
+            }
+        }
+
 
         public void UpdateAppointment(Appointment appointment)
         {
 
-                var query = @"UPDATE appointment 
+            var query = @"UPDATE appointment 
                       SET CustomerId = @CustomerId, 
                           UserId = @UserId, 
                           Title = @Title, 
@@ -106,6 +134,8 @@ namespace C969App.Data
                           LastUpdate = @LastUpdate, 
                           LastUpdateBy = @LastUpdateBy 
                       WHERE AppointmentId = @AppointmentId";
+            try
+            {
                 using (var command = new MySqlCommand(query, _context.Connection))
                 {
                     command.Parameters.AddWithValue("@CustomerId", appointment.CustomerId);
@@ -115,15 +145,20 @@ namespace C969App.Data
                     command.Parameters.AddWithValue("@Location", appointment.Location);
                     command.Parameters.AddWithValue("@Contact", appointment.Contact);
                     command.Parameters.AddWithValue("@Type", appointment.Type);
-                    command.Parameters.AddWithValue("@Url", appointment.Url);
+                    command.Parameters.AddWithValue("@Url", appointment.Url ?? "default-url.com");
                     command.Parameters.AddWithValue("@Start", appointment.Start);
                     command.Parameters.AddWithValue("@End", appointment.End);
                     command.Parameters.AddWithValue("@LastUpdate", appointment.LastUpdate);
-                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy);
+                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy ?? "default name");
                     command.Parameters.AddWithValue("@AppointmentId", appointment.AppointmentId);
 
                     command.ExecuteNonQuery();
-                
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"There was an issue saving that change. {ex.ToString()}");
             }
         }
 
@@ -131,12 +166,19 @@ namespace C969App.Data
         {
             var query = @"DELETE FROM appointment WHERE AppointmentId = @AppointmentId";
 
-            using (var command = new MySqlCommand(query, _context.Connection))
+            try
             {
-                command.Parameters.AddWithValue("@AppointmentId", appointmentId);
-                command.ExecuteNonQuery();
-            }
+                using (var command = new MySqlCommand(query, _context.Connection))
+                {
+                    command.Parameters.AddWithValue("@AppointmentId", appointmentId);
+                    command.ExecuteNonQuery();
+                }
 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"There was an issue deleting that appointment. {ex.ToString()}");
+            }
         }
 
     }
