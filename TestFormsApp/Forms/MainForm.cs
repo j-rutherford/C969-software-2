@@ -32,8 +32,8 @@ namespace C969App.Forms
 
         private void btnAppointment_Click(object sender, EventArgs e)
         {
-            //var appointmentForm = new AppointmentForm(_appointmentRepository);
-            //appointmentForm.Show();
+            var appointmentForm = new AppointmentForm(_appointmentRepository);
+            appointmentForm.Show();
         }
     }
 }

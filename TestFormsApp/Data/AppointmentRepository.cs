@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using C969App.Models;
 using System.Linq;
+using System.Windows.Forms;
+using System.Data;
 
 namespace C969App.Data
 {
@@ -15,42 +17,23 @@ namespace C969App.Data
             _context = context;
         }
 
-        public List<Appointment> GetAllAppointments()
+        public DataTable GetAllAppointments()
         {
-            var appointments = new List<Appointment>();
-            var query = @"SELECT * FROM appointment";
+            var dataTable = new DataTable();
+            var query = @"SELECT a.AppointmentId, c.CustomerName, u.UserName, 
+                         a.Title, a.Location, a.Contact, a.Type, 
+                         a.Start, a.End
+                  FROM appointment a
+                  INNER JOIN customer c ON a.CustomerId = c.CustomerId
+                  INNER JOIN user u ON a.UserId = u.UserId";
 
-            using (var command = new MySqlCommand(query, _context.Connection))
-
-            using (var reader = command.ExecuteReader())
+            using (var dataAdapter = new MySqlDataAdapter(query, _context.Connection))
             {
-                while (reader.Read())
-                {
-                    var appointment = new Appointment
-                    {
-                        AppointmentId = reader.GetInt32("AppointmentId"),
-                        CustomerId = reader.GetInt32("CustomerId"),
-                        UserId = reader.GetInt32("UserId"),
-                        Title = reader.GetString("Title"),
-                        Description = reader.GetString("Description"),
-                        Location = reader.GetString("Location"),
-                        Contact = reader.GetString("Contact"),
-                        Type = reader.GetString("Type"),
-                        Url = reader.GetString("Url"),
-                        Start = reader.GetDateTime("Start"),
-                        End = reader.GetDateTime("End"),
-                        CreateDate = reader.GetDateTime("CreateDate"),
-                        CreatedBy = reader.GetString("CreatedBy"),
-                        LastUpdate = reader.GetDateTime("LastUpdate"),
-                        LastUpdateBy = reader.GetString("LastUpdateBy"),
-                        // Populate navigation properties if needed
-                    };
-                    appointments.Add(appointment);
-                }
+                dataAdapter.Fill(dataTable);
             }
-            return appointments;
-        }
 
+            return dataTable;
+        }
 
 
         public Appointment GetAppointmentById(int appointmentId)
@@ -58,7 +41,12 @@ namespace C969App.Data
             try
             {
                 var allAppointments = GetAllAppointments();
-                var appointment = allAppointments.FirstOrDefault(a => a.AppointmentId == appointmentId);
+                var appointmentRow = allAppointments.Rows.Find(appointmentId);
+
+                var appointment = new Appointment()
+                {
+                    AppointmentId = (int)appointmentRow["AppointmentId"]
+                };
 
                 if (appointment == null)
                 {
@@ -70,7 +58,7 @@ namespace C969App.Data
             catch (Exception ex)
             {
                 // Log or handle the exception as needed
-                Console.WriteLine($"Error fetching appointment: {ex.Message}");
+                MessageBox.Show($"Error fetching appointment: {ex.Message}");
                 return null;
             }
         }
