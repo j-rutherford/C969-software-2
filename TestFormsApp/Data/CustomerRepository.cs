@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using C969App.Models;
+using System.Linq;
 
 namespace C969App.Data
 {
@@ -22,8 +23,8 @@ namespace C969App.Data
             string query = @"SELECT c.CustomerId, c.CustomerName, 
                             a.AddressId, a.Address AS AddressLine1, a.Address2 AS AddressLine2, a.PostalCode, a.Phone, 
                             ct.CityId, ct.City AS CityName, 
-                            co.CountryId, co.Country AS CountryName, 
-                            c.Active, c.CreateDate, c.CreatedBy, c.LastUpdate, c.LastUpdateBy
+                            co.CountryId, co.Country AS CountryName
+                            , c.Active, c.CreateDate, c.CreatedBy, c.LastUpdate, c.LastUpdateBy
                      FROM customer c
                      INNER JOIN address a ON c.AddressId = a.AddressId
                      INNER JOIN city ct ON a.CityId = ct.CityId
@@ -61,6 +62,10 @@ namespace C969App.Data
             return customers;
         }
 
+        public Customer GetCustomerById(int id)
+        {
+            return GetAllCustomers().FirstOrDefault(x => x.CustomerId == id);
+        }
         // Add a new customer and associated country, city, and address
         public void AddCustomer(Customer customer)
         {

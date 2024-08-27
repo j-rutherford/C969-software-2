@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using C969App.Data;
 using C969App.Models;
@@ -31,125 +32,74 @@ namespace C969App.Forms
             dgvCustomers.Columns["PostalCode"].Visible = true;
             dgvCustomers.Columns["Phone"].Visible = true;
 
-
+            // Set other columns to not visible
+            foreach (DataGridViewColumn column in dgvCustomers.Columns)
+            {
+                if (column.Name != "CustomerId" && column.Name != "CustomerName" &&
+                    column.Name != "AddressLine1" && column.Name != "AddressLine2" &&
+                    column.Name != "CityName" && column.Name != "CountryName" &&
+                    column.Name != "PostalCode" && column.Name != "Phone")
+                {
+                    column.Visible = false;
+                }
+            }
         }
 
 
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (ValidateFields())
-            {
-                // Create a new Customer object with the input values from the form
-                var newCustomer = new Customer
-                {
-                    CustomerName = txtCustomerName.Text,
-                    AddressLine1 = txtAddressLine1.Text,
-                    AddressLine2 = txtAddressLine2.Text,
-                    PostalCode = txtPostalCode.Text,
-                    Phone = txtPhone.Text,
-                    CityName = txtCity.Text,
-                    CountryName = txtCountry.Text,
-                    Active = true, // Set this based on your logic
-                    CreateDate = DateTime.UtcNow, // Assuming all times are stored in UTC
-                    CreatedBy = "YourUserName", // Replace with the current user's name
-                    LastUpdate = DateTime.UtcNow,
-                    LastUpdateBy = "YourUserName" // Replace with the current user's name
-                };
-
-                // Add the new customer to the database
-                _customerRepository.AddCustomer(newCustomer);
-
-                // Refresh the DataGridView and clear the form fields
-                LoadCustomers();
-                ClearFields();
-            }
-            else
-            {
-                MessageBox.Show("Please fill in all required fields.", "Add Customer Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            var customerDetailForm = new CustomerDetailForm(_customerRepository);
+            customerDetailForm.ShowDialog();
+            LoadCustomers();  // Refresh the customer list after adding
         }
 
-        private void btnUpdate_Click(object sender, EventArgs e)
+        private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (dgvCustomers.SelectedRows.Count > 0 && ValidateFields())
+            if (dgvCustomers.SelectedRows.Count > 0)
             {
-                var customer = new Customer
-                {
-                    CustomerId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CustomerId"].Value),
-                    CustomerName = txtCustomerName.Text,
-                    AddressId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["AddressId"].Value),
-                    AddressLine1 = txtAddressLine1.Text,
-                    AddressLine2 = txtAddressLine2.Text,
-                    PostalCode = txtPostalCode.Text,
-                    Phone = txtPhone.Text,
-                    CityId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CityId"].Value),
-                    CityName = txtCity.Text,
-                    CountryId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CountryId"].Value),
-                    CountryName = txtCountry.Text,
-                    Active = true // or based on logic
-                };
+                var customerId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CustomerId"].Value);
+                var customer = _customerRepository.GetCustomerById(customerId);
 
-                _customerRepository.UpdateCustomer(customer);
-
-                LoadCustomers();
-                ClearFields();
+                var customerDetailForm = new CustomerDetailForm(_customerRepository, customer);
+                customerDetailForm.ShowDialog();
+                LoadCustomers();  // Refresh the customer list after editing
             }
             else
             {
-                MessageBox.Show("Please select a customer to update.", "Update Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select a customer to edit.", "Edit Customer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (dgvCustomers.SelectedRows.Count > 0)
             {
-                var customerId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CustomerId"].Value);
-                _customerRepository.DeleteCustomer(customerId);
-                LoadCustomers();
-                ClearFields();
+                var customerName = dgvCustomers.SelectedRows[0].Cells["CustomerName"].Value.ToString();
+                var confirmResult = MessageBox.Show(
+                    $"Are you sure you want to delete the customer '{customerName}'?",
+                    "Confirm Delete",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (confirmResult == DialogResult.Yes)
+                {
+                    var customerId = Convert.ToInt32(dgvCustomers.SelectedRows[0].Cells["CustomerId"].Value);
+                    _customerRepository.DeleteCustomer(customerId);
+                    LoadCustomers();  // Refresh the customer list after deletion
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a customer to delete.", "Delete Customer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             LoadCustomers();
-        }
-
-        private void dgvCustomers_SelectionChanged(object sender, EventArgs e)
-        {
-            if (dgvCustomers.SelectedRows.Count > 0)
-            {
-                txtCustomerName.Text = dgvCustomers.SelectedRows[0].Cells["CustomerName"].Value.ToString();
-                txtAddressLine1.Text = dgvCustomers.SelectedRows[0].Cells["AddressLine1"].Value.ToString();
-                txtAddressLine2.Text = dgvCustomers.SelectedRows[0].Cells["AddressLine2"].Value.ToString();
-                txtPostalCode.Text = dgvCustomers.SelectedRows[0].Cells["PostalCode"].Value.ToString();
-                txtPhone.Text = dgvCustomers.SelectedRows[0].Cells["Phone"].Value.ToString();
-                txtCity.Text = dgvCustomers.SelectedRows[0].Cells["City"].Value.ToString();
-                txtCountry.Text = dgvCustomers.SelectedRows[0].Cells["Country"].Value.ToString();
-            }
-        }
-
-        private bool ValidateFields()
-        {
-            return true;
-        }
-
-        private void ClearFields()
-        {
-            txtCustomerName.Clear();
-            txtAddressLine1.Clear();
-            txtAddressLine2.Clear();
-            txtPostalCode.Clear();
-            txtPhone.Clear();
-            txtCity.Clear();
-            txtCountry.Clear();
-        }
-
-        private void dgvCustomers_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
         }
     }
 }

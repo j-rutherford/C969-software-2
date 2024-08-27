@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace C969App.Models
 {
@@ -12,5 +13,7 @@ namespace C969App.Models
         public string CreatedBy { get; set; }
         public DateTime LastUpdate { get; set; }
         public string LastUpdateBy { get; set; }
+
+        public virtual List<Appointment> Appointments { get; set; }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using C969App.Models;
+using System;
+using System.Collections.Generic;
 
 public class Customer
 {
@@ -18,4 +20,6 @@ public class Customer
     public string CreatedBy { get; set; }
     public DateTime LastUpdate { get; set; }
     public string LastUpdateBy { get; set; }
+
+    public virtual List<Appointment> Appointments { get; set; }
 }
