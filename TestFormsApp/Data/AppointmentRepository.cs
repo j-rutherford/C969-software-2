@@ -17,14 +17,15 @@ namespace C969App.Data
             _context = context;
         }
 
+        // Retrieve all appointments with associated customer and user information
         public DataTable GetAllAppointments()
         {
             var dataTable = new DataTable();
-            var query = @"SELECT a.AppointmentId, a.CustomerId, a.UserId, 
-                         a.Title, a.Description, a.Location, a.Contact, 
-                         a.Type, a.Start, a.End, 
-                         a.CreateDate, a.CreatedBy, a.LastUpdate, a.LastUpdateBy,
-                         c.CustomerName, u.UserName 
+            var query = @"SELECT a.AppointmentId, 
+                         c.CustomerId, c.CustomerName, 
+                         u.UserId, u.UserName, 
+                         a.Type, DATE(a.Start) AS AppointmentDate, 
+                         TIME(a.Start) AS StartTime, TIME(a.End) AS EndTime
                   FROM appointment a
                   INNER JOIN customer c ON a.CustomerId = c.CustomerId
                   INNER JOIN user u ON a.UserId = u.UserId";
@@ -34,151 +35,150 @@ namespace C969App.Data
                 dataAdapter.Fill(dataTable);
             }
 
-            foreach (DataRow row in dataTable.Rows)
-            {
-                row["Start"] = Convert.ToDateTime(row["Start"]).ToLocalTime();
-                row["End"] = Convert.ToDateTime(row["End"]).ToLocalTime();
-            }
-            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["AppointmentId"] };
             return dataTable;
         }
 
-
-        public Appointment GetAppointmentById(int appointmentId)
+        // Retrieve a specific appointment by its ID
+        public AppointmentDTO GetAppointmentById(int appointmentId)
         {
             try
             {
+                // Get all appointments as a DataTable
                 var allAppointments = GetAllAppointments();
-                var appointmentRow = allAppointments.Rows.Find(appointmentId);
+
+                // Use LINQ with a lambda expression to find the specific appointment by ID
+                var appointmentRow = allAppointments.AsEnumerable()
+                    .FirstOrDefault(row => row.Field<int>("AppointmentId") == appointmentId);
 
                 if (appointmentRow == null)
                 {
                     throw new Exception($"Appointment with ID {appointmentId} not found.");
                 }
 
-                var appointment = new Appointment
+                // Convert and combine the date and time for Start and End
+                DateTime appointmentDate = appointmentRow.Field<DateTime>("AppointmentDate");
+                TimeSpan startTime = (TimeSpan)appointmentRow["StartTime"];
+                TimeSpan endTime = (TimeSpan)appointmentRow["EndTime"];
+
+                // Combine date with time, and convert to local time
+                DateTime startDateTime = appointmentDate.Add(startTime).ToLocalTime();
+                DateTime endDateTime = appointmentDate.Add(endTime).ToLocalTime();
+
+                // Create the AppointmentDTO from the DataRow
+                var appointment = new AppointmentDTO
                 {
-                    AppointmentId = (int)appointmentRow["AppointmentId"],
-                    CustomerId = (int)appointmentRow["CustomerId"],
-                    UserId = (int)appointmentRow["UserId"],
-                    Title = appointmentRow["Title"].ToString(),
-                    Description = appointmentRow["Description"].ToString(),
-                    Location = appointmentRow["Location"].ToString(),
-                    Contact = appointmentRow["Contact"].ToString(),
-                    Type = appointmentRow["Type"].ToString(),
-                    Start = (DateTime)appointmentRow["Start"],
-                    End = (DateTime)appointmentRow["End"],
-                    CreateDate = (DateTime)appointmentRow["CreateDate"],
-                    CreatedBy = appointmentRow["CreatedBy"].ToString(),
-                    LastUpdate = (DateTime)appointmentRow["LastUpdate"],
-                    LastUpdateBy = appointmentRow["LastUpdateBy"].ToString(),
+                    AppointmentId = appointmentRow.Field<int>("AppointmentId"),
+                    CustomerId = appointmentRow.Field<int>("CustomerId"),
+                    UserId = appointmentRow.Field<int>("UserId"),
+                    CustomerName = appointmentRow.Field<string>("CustomerName"),
+                    UserName = appointmentRow.Field<string>("UserName"),
+                    Type = appointmentRow.Field<string>("Type"),
+                    Start = startDateTime,
+                    End = endDateTime
                 };
 
                 return appointment;
             }
+            catch (InvalidCastException ex)
+            {
+                MessageBox.Show($"Invalid data type conversion: {ex.Message}", "Conversion Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
             catch (Exception ex)
             {
-                // Log or handle the exception as needed
-                MessageBox.Show($"Error fetching appointment: {ex.ToString()}");
+                MessageBox.Show($"Error fetching appointment: {ex.Message}");
                 return null;
             }
         }
-        public void AddAppointment(Appointment appointment)
+
+        // Add a new appointment
+        public void AddAppointment(AppointmentDTO appointment)
         {
-            try
-            {
-                var query = @"INSERT INTO appointment (CustomerId, UserId, Title, Description, Location, Contact, Type, Url, Start, End, CreateDate, CreatedBy, LastUpdate, LastUpdateBy) 
-                              VALUES (@CustomerId, @UserId, @Title, @Description, @Location, @Contact, @Type, @Url, @Start, @End, @CreateDate, @CreatedBy, @LastUpdate, @LastUpdateBy)";
-                using (var command = new MySqlCommand(query, _context.Connection))
-                {
-                    command.Parameters.AddWithValue("@CustomerId", appointment.CustomerId);
-                    command.Parameters.AddWithValue("@UserId", appointment.UserId);
-                    command.Parameters.AddWithValue("@Title", appointment.Title);
-                    command.Parameters.AddWithValue("@Description", appointment.Description);
-                    command.Parameters.AddWithValue("@Location", appointment.Location);
-                    command.Parameters.AddWithValue("@Contact", appointment.Contact);
-                    command.Parameters.AddWithValue("@Type", appointment.Type);
-                    command.Parameters.AddWithValue("@Url", appointment.Url ?? "default-url.com");
-                    command.Parameters.AddWithValue("@Start", appointment.Start);
-                    command.Parameters.AddWithValue("@End", appointment.End);
-                    command.Parameters.AddWithValue("@CreateDate", appointment.CreateDate);
-                    command.Parameters.AddWithValue("@CreatedBy", appointment.CreatedBy ?? "default name");
-                    command.Parameters.AddWithValue("@LastUpdate", appointment.LastUpdate);
-                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy ?? "default name");
+            string query = @"INSERT INTO appointment (CustomerId, UserId, Type,Title, Start, End, CreateDate, CreatedBy, LastUpdate, LastUpdateBy, Description, Location, Contact, Url) 
+                             VALUES (@CustomerId, @UserId, @Type,'[N/A]', @Start, @End, NOW(), 'ADMIN', NOW(), 'ADMIN','[N/A]','[N/A]','[N/A]','[N/A]')";
 
-                    command.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
+            using (var command = new MySqlCommand(query, _context.Connection))
             {
+                command.Parameters.AddWithValue("@CustomerId", appointment.CustomerId);
+                command.Parameters.AddWithValue("@UserId", appointment.UserId);
+                command.Parameters.AddWithValue("@Type", appointment.Type);
+                command.Parameters.AddWithValue("@Start", appointment.Start);
+                command.Parameters.AddWithValue("@End", appointment.End);
 
-                MessageBox.Show("There was an issue saving that appointment. " + ex.ToString());
+                command.ExecuteNonQuery();
             }
         }
 
-
-        public void UpdateAppointment(Appointment appointment)
+        // Update an existing appointment
+        public void UpdateAppointment(AppointmentDTO appointment)
         {
+            string query = @"UPDATE appointment 
+                             SET CustomerId = @CustomerId, 
+                                 UserId = @UserId, 
+                                 Type = @Type, 
+                                 Start = @Start, 
+                                 End = @End, 
+                                 LastUpdate = NOW(), 
+                                 LastUpdateBy = 'ADMIN' 
+                             WHERE AppointmentId = @AppointmentId";
 
-            var query = @"UPDATE appointment 
-                      SET CustomerId = @CustomerId, 
-                          UserId = @UserId, 
-                          Title = @Title, 
-                          Description = @Description, 
-                          Location = @Location, 
-                          Contact = @Contact, 
-                          Type = @Type, 
-                          Url = @Url, 
-                          Start = @Start, 
-                          End = @End, 
-                          LastUpdate = @LastUpdate, 
-                          LastUpdateBy = @LastUpdateBy 
-                      WHERE AppointmentId = @AppointmentId";
-            try
+            using (var command = new MySqlCommand(query, _context.Connection))
             {
-                using (var command = new MySqlCommand(query, _context.Connection))
-                {
-                    command.Parameters.AddWithValue("@CustomerId", appointment.CustomerId);
-                    command.Parameters.AddWithValue("@UserId", appointment.UserId);
-                    command.Parameters.AddWithValue("@Title", appointment.Title);
-                    command.Parameters.AddWithValue("@Description", appointment.Description);
-                    command.Parameters.AddWithValue("@Location", appointment.Location);
-                    command.Parameters.AddWithValue("@Contact", appointment.Contact);
-                    command.Parameters.AddWithValue("@Type", appointment.Type);
-                    command.Parameters.AddWithValue("@Url", appointment.Url ?? "default-url.com");
-                    command.Parameters.AddWithValue("@Start", appointment.Start);
-                    command.Parameters.AddWithValue("@End", appointment.End);
-                    command.Parameters.AddWithValue("@LastUpdate", appointment.LastUpdate);
-                    command.Parameters.AddWithValue("@LastUpdateBy", appointment.LastUpdateBy ?? "default name");
-                    command.Parameters.AddWithValue("@AppointmentId", appointment.AppointmentId);
+                command.Parameters.AddWithValue("@CustomerId", appointment.CustomerId);
+                command.Parameters.AddWithValue("@UserId", appointment.UserId);
+                command.Parameters.AddWithValue("@Type", appointment.Type);
+                command.Parameters.AddWithValue("@Start", appointment.Start);
+                command.Parameters.AddWithValue("@End", appointment.End);
+                command.Parameters.AddWithValue("@AppointmentId", appointment.AppointmentId);
 
-                    command.ExecuteNonQuery();
-
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"There was an issue saving that change. {ex.ToString()}");
+                command.ExecuteNonQuery();
             }
         }
 
+        // Delete an appointment
         public void DeleteAppointment(int appointmentId)
         {
-            var query = @"DELETE FROM appointment WHERE AppointmentId = @AppointmentId";
+            string query = @"DELETE FROM appointment WHERE AppointmentId = @AppointmentId";
 
-            try
+            using (var command = new MySqlCommand(query, _context.Connection))
             {
-                using (var command = new MySqlCommand(query, _context.Connection))
+                command.Parameters.AddWithValue("@AppointmentId", appointmentId);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public List<AppointmentDTO> GetAppointmentsByUser(int userId)
+        {
+            var appointments = new List<AppointmentDTO>();
+            var query = @"SELECT a.AppointmentId, c.CustomerName, u.UserName, 
+                         a.Type, a.Start, a.End
+                  FROM appointment a
+                  INNER JOIN customer c ON a.CustomerId = c.CustomerId
+                  INNER JOIN user u ON a.UserId = u.UserId
+                  WHERE a.UserId = @UserId";
+
+            using (var command = new MySqlCommand(query, _context.Connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                using (var reader = command.ExecuteReader())
                 {
-                    command.Parameters.AddWithValue("@AppointmentId", appointmentId);
-                    command.ExecuteNonQuery();
+                    while (reader.Read())
+                    {
+                        var appointment = new AppointmentDTO
+                        {
+                            AppointmentId = reader.GetInt32("AppointmentId"),
+                            CustomerName = reader.GetString("CustomerName"),
+                            UserName = reader.GetString("UserName"),
+                            Type = reader.GetString("Type"),
+                            Start = reader.GetDateTime("Start"),
+                            End = reader.GetDateTime("End")
+                        };
+                        appointments.Add(appointment);
+                    }
                 }
-
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"There was an issue deleting that appointment. {ex.ToString()}");
-            }
+            return appointments;
         }
 
     }

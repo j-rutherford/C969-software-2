@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using C969App.Data;
 using C969App.Models;
-using System.Collections.Generic;
+
 
 namespace C969App.Forms
 {
@@ -11,7 +11,7 @@ namespace C969App.Forms
         private readonly AppointmentRepository _appointmentRepository;
         private readonly CustomerRepository _customerRepository;
         private readonly UserRepository _userRepository;
-        private Appointment _appointment;
+        private AppointmentDTO _appointment;
 
         // Constructor for adding a new appointment
         public AppointmentDetailForm(AppointmentRepository appointmentRepository, CustomerRepository customerRepository, UserRepository userRepository)
@@ -20,89 +20,83 @@ namespace C969App.Forms
             _appointmentRepository = appointmentRepository;
             _customerRepository = customerRepository;
             _userRepository = userRepository;
-            _appointment = new Appointment();
-            LoadComboBoxes();
+            _appointment = new AppointmentDTO();
+
+            PopulateCustomerComboBox();
+            PopulateUserComboBox();
         }
 
         // Constructor for editing an existing appointment
-        public AppointmentDetailForm(AppointmentRepository appointmentRepository, CustomerRepository customerRepository, UserRepository userRepository, Appointment appointment) : this(appointmentRepository, customerRepository, userRepository)
+        public AppointmentDetailForm(AppointmentRepository appointmentRepository, CustomerRepository customerRepository, UserRepository userRepository, AppointmentDTO appointment)
+            : this(appointmentRepository, customerRepository, userRepository)
         {
             _appointment = appointment;
             PopulateFields();
         }
 
-        private void LoadComboBoxes()
+        private void PopulateCustomerComboBox()
         {
-            // Load Customers into ComboBox
             var customers = _customerRepository.GetAllCustomers();
             cmbCustomer.DataSource = customers;
             cmbCustomer.DisplayMember = "CustomerName";
             cmbCustomer.ValueMember = "CustomerId";
+        }
 
-            // Load Users into ComboBox
+        private void PopulateUserComboBox()
+        {
             var users = _userRepository.GetAllUsers();
             cmbUser.DataSource = users;
             cmbUser.DisplayMember = "UserName";
             cmbUser.ValueMember = "UserId";
         }
+
         private void PopulateFields()
         {
-            // Ensure that the CustomerId and UserId match the values in the combo boxes
-            if (cmbCustomer.Items.Count > 0)
+            // Populate the combo boxes first
+            PopulateCustomerComboBox();
+            PopulateUserComboBox();
+
+            // Set the values
+            txtType.Text = _appointment.Type;
+            dtpDate.Value = _appointment.Start.Date;
+            dtpStartTime.Value = _appointment.Start;
+            dtpEndTime.Value = _appointment.End;
+
+            // Ensure the combo boxes have the correct ValueMember and DisplayMember set
+            cmbCustomer.SelectedValue = _appointment.CustomerId;
+            cmbUser.SelectedValue = _appointment.UserId;
+
+            // Check if the SelectedValue was set correctly
+            if (cmbCustomer.SelectedValue == null)
             {
-                cmbCustomer.SelectedValue = _appointment.CustomerId;
-            }
-            if (cmbUser.Items.Count > 0)
-            {
-                cmbUser.SelectedValue = _appointment.UserId;
+                MessageBox.Show("Customer not found in the list.", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
-            txtTitle.Text = _appointment.Title ?? string.Empty;
-            txtDescription.Text = _appointment.Description ?? string.Empty;
-            txtLocation.Text = _appointment.Location ?? string.Empty;
-            txtContact.Text = _appointment.Contact ?? string.Empty;
-            txtType.Text = _appointment.Type ?? string.Empty;
-
-            // Validate and set Start DateTime
-            if (_appointment.Start > dtpStart.MinDate && _appointment.Start < dtpStart.MaxDate)
+            if (cmbUser.SelectedValue == null)
             {
-                dtpStart.Value = _appointment.Start.ToLocalTime();
-            }
-            else
-            {
-                dtpStart.Value = DateTime.Now; // Set to a default value within a valid range
-            }
-
-            // Validate and set End DateTime
-            if (_appointment.End > dtpEnd.MinDate && _appointment.End < dtpEnd.MaxDate)
-            {
-                dtpEnd.Value = _appointment.End.ToLocalTime();
-            }
-            else
-            {
-                dtpEnd.Value = DateTime.Now.AddHours(1); // Set to a default value within a valid range
+                MessageBox.Show("User not found in the list.", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
 
         private void btnSave_Click(object sender, EventArgs e)
         {
+            if (!ValidateFields())
+            {
+                return;
+            }
+            _appointment.Type = txtType.Text.Trim();
             _appointment.CustomerId = (int)cmbCustomer.SelectedValue;
             _appointment.UserId = (int)cmbUser.SelectedValue;
-            _appointment.Title = txtTitle.Text;
-            _appointment.Description = txtDescription.Text;
-            _appointment.Location = txtLocation.Text;
-            _appointment.Contact = txtContact.Text;
-            _appointment.Type = txtType.Text;
-            _appointment.Start = dtpStart.Value.ToUniversalTime();
-            _appointment.End = dtpEnd.Value.ToUniversalTime();
-            _appointment.LastUpdate = DateTime.UtcNow;
-            _appointment.LastUpdateBy = "YourUserName";  // Replace with actual user
 
+            // Combine the selected date with the times
+            var start = dtpDate.Value.Date + dtpStartTime.Value.TimeOfDay;
+            var end = dtpDate.Value.Date + dtpEndTime.Value.TimeOfDay;
+
+            _appointment.Start = TimeZoneInfo.ConvertTimeToUtc(start, TimeZoneInfo.Local);
+            _appointment.End = TimeZoneInfo.ConvertTimeToUtc(end, TimeZoneInfo.Local);
             if (_appointment.AppointmentId == 0)  // New appointment
             {
-                _appointment.CreateDate = DateTime.UtcNow;
-                _appointment.CreatedBy = "YourUserName";  // Replace with actual user
                 _appointmentRepository.AddAppointment(_appointment);
             }
             else  // Existing appointment
@@ -113,9 +107,82 @@ namespace C969App.Forms
             this.Close();
         }
 
+        private bool ValidateFields()
+        {
+            // Basic validation checks
+            if (string.IsNullOrWhiteSpace(txtType.Text) ||
+                cmbCustomer.SelectedValue == null ||
+                cmbUser.SelectedValue == null)
+            {
+                MessageBox.Show("All fields are required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            if (dtpEndTime.Value.TimeOfDay <= dtpStartTime.Value.TimeOfDay)
+            {
+                MessageBox.Show("End time must be after start time.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            // Combine date with the start and end times
+            var start = dtpDate.Value.Date + dtpStartTime.Value.TimeOfDay;
+            var end = dtpDate.Value.Date + dtpEndTime.Value.TimeOfDay;
+
+            // Convert 9 AM and 5 PM EST to UTC
+            var estTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            var est9amUtc = TimeZoneInfo.ConvertTimeToUtc(new DateTime(dtpDate.Value.Year, dtpDate.Value.Month, dtpDate.Value.Day, 9, 0, 0), estTimeZone);
+            var est5pmUtc = TimeZoneInfo.ConvertTimeToUtc(new DateTime(dtpDate.Value.Year, dtpDate.Value.Month, dtpDate.Value.Day, 17, 0, 0), estTimeZone);
+
+            // Convert 9 AM and 5 PM EST from UTC to the user's local time
+            var local9am = TimeZoneInfo.ConvertTimeFromUtc(est9amUtc, TimeZoneInfo.Local);
+            var local5pm = TimeZoneInfo.ConvertTimeFromUtc(est5pmUtc, TimeZoneInfo.Local);
+
+            // Convert the start and end times to UTC
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(start, TimeZoneInfo.Local);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(end, TimeZoneInfo.Local);
+
+            // Check if the times are within the business hours
+            if (startUtc < est9amUtc || endUtc > est5pmUtc)
+            {
+                MessageBox.Show($"Appointments must be scheduled between 09:00 and 17:00 EST, which is between {local9am:HH:mm} and {local5pm:HH:mm} in your local time.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            // Check for overlapping appointments by User/Consultant
+            if (IsOverlappingAppointment((int)cmbUser.SelectedValue, startUtc, endUtc, _appointment.AppointmentId))
+            {
+                MessageBox.Show("The selected appointment time overlaps with another appointment for this consultant.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            return true;
+        }
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+        private bool IsOverlappingAppointment(int userId, DateTime start, DateTime end, int? excludeAppointmentId = null)
+        {
+            var appointments = _appointmentRepository.GetAppointmentsByUser(userId);
+
+            foreach (var appointment in appointments)
+            {
+                // Skip the current appointment being edited
+                if (excludeAppointmentId.HasValue && appointment.AppointmentId == excludeAppointmentId.Value)
+                    continue;
+
+                // Check if the time slots overlap
+                if ((start < appointment.End && end > appointment.Start) ||
+                    (start >= appointment.Start && start < appointment.End) ||
+                    (end > appointment.Start && end <= appointment.End))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     }
 }

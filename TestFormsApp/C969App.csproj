@@ -160,6 +160,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>StringsIt.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Forms\AppointmentDetailForm.resx">
+      <DependentUpon>AppointmentDetailForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\AppointmentForm.resx">
       <DependentUpon>AppointmentForm.cs</DependentUpon>
     </EmbeddedResource>

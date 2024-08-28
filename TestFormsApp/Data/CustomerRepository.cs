@@ -58,6 +58,8 @@ namespace C969App.Data
 
         public Customer GetCustomerById(int id)
         {
+            //LAMBDA - Required for declaring predicates in LINQ statements. 
+            //Lambda is declaring a parameter, x, to act as the holding variable for elements within the list returned by GetAllCustomers()
             return GetAllCustomers().FirstOrDefault(x => x.CustomerId == id);
         }
         // Add a new customer and associated country, city, and address

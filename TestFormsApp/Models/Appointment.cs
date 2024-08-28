@@ -7,21 +7,31 @@ namespace C969App.Models
         public int AppointmentId { get; set; }
         public int CustomerId { get; set; }
         public int UserId { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Location { get; set; }
-        public string Contact { get; set; }
         public string Type { get; set; }
-        public string Url { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
-        public DateTime CreateDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime LastUpdate { get; set; }
-        public string LastUpdateBy { get; set; }
+
+        // Placeholder values for the rest of the fields
+        public string Title { get; set; } = "Not Applicable";
+        public string Description { get; set; } = "Not Applicable";
+        public string Location { get; set; } = "Not Applicable";
+        public string Contact { get; set; } = "Not Applicable";
+        public string Url { get; set; } = "http://placeholder.com";
 
         // Navigation properties
         public virtual Customer Customer { get; set; }
         public virtual User User { get; set; }
+    }
+    //Decided to use a DTO here because I'm getting mad at finding workarounds for everything.
+    public class AppointmentDTO
+    {
+        public int AppointmentId { get; set; }
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; }
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public string Type { get; set; }
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
     }
 }
