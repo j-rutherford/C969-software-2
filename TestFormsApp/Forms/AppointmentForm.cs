@@ -3,6 +3,7 @@ using C969App.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace C969App.Forms
@@ -132,6 +133,67 @@ namespace C969App.Forms
                 }
             }
         }
+        private void btnAllAppointments_Click(object sender, EventArgs e)
+        {
+            LoadAppointments();
+        }
+
+        private void btnCurrentWeek_Click(object sender, EventArgs e)
+        {
+            LoadAppointments(DateTime.Now.StartOfWeek(DayOfWeek.Monday), DateTime.Now.EndOfWeek(DayOfWeek.Sunday));
+        }
+
+        private void btnCurrentMonth_Click(object sender, EventArgs e)
+        {
+            LoadAppointments(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
+                             new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)));
+        }
+        private void LoadAppointments(DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var appointments = _appointmentRepository.GetAllAppointments();
+
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                var filteredAppointments = appointments.AsEnumerable()
+                    .Where(row => row.Field<DateTime>("AppointmentDate") >= startDate.Value && row.Field<DateTime>("AppointmentDate") <= endDate.Value);
+
+                if (filteredAppointments.Any())
+                {
+                    appointments = filteredAppointments.CopyToDataTable();
+                }
+                else
+                {
+                    MessageBox.Show("No appointments found for the selected date range.", "No Data", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    dgvAppointments.DataSource = null; // Clear the DataGridView
+                    return;
+                }
+            }
+
+            dgvAppointments.DataSource = appointments;
+
+            // Set the visibility and headers of the columns
+            dgvAppointments.Columns["AppointmentId"].Visible = false;
+            dgvAppointments.Columns["CustomerName"].HeaderText = "Customer";
+            dgvAppointments.Columns["UserName"].HeaderText = "Consultant";
+            dgvAppointments.Columns["Type"].HeaderText = "Appointment Type";
+            dgvAppointments.Columns["AppointmentDate"].HeaderText = "Date";
+            dgvAppointments.Columns["StartTime"].HeaderText = "Start Time";
+            dgvAppointments.Columns["EndTime"].HeaderText = "End Time";
+        }
 
     }
+    public static class DateTimeExtensions
+    {
+        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
+        }
+
+        public static DateTime EndOfWeek(this DateTime dt, DayOfWeek endOfWeek)
+        {
+            return dt.StartOfWeek(endOfWeek).AddDays(6);
+        }
+    }
+
 }

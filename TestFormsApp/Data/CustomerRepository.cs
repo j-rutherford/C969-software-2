@@ -118,7 +118,7 @@ namespace C969App.Data
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    MessageBox.Show("ERROR: \n" + ex.ToString());
+                    MessageBox.Show("ERROR: \n" + ex.Message);
                 }
             }
         }
@@ -187,7 +187,7 @@ namespace C969App.Data
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    MessageBox.Show("ERROR: \n" + ex.ToString());
+                    MessageBox.Show("ERROR: \n" + ex.Message);
                 }
             }
         }

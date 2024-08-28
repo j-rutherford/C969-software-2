@@ -3,10 +3,6 @@
     partial class AppointmentForm
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.DataGridView dgvAppointments;
-        private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.Button btnEdit;
-        private System.Windows.Forms.Button btnDelete;
 
         protected override void Dispose(bool disposing)
         {
@@ -22,63 +18,94 @@
         private void InitializeComponent()
         {
             this.dgvAppointments = new System.Windows.Forms.DataGridView();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.btnEdit = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
+            this.btnAllAppointments = new System.Windows.Forms.Button();
+            this.btnCurrentWeek = new System.Windows.Forms.Button();
+            this.btnCurrentMonth = new System.Windows.Forms.Button();
+            this.btnAddAppointment = new System.Windows.Forms.Button();
+            this.btnEditAppointment = new System.Windows.Forms.Button();
+            this.btnDeleteAppointment = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAppointments)).BeginInit();
             this.SuspendLayout();
             // 
             // dgvAppointments
             // 
-            this.dgvAppointments.AllowUserToAddRows = false;
-            this.dgvAppointments.AllowUserToDeleteRows = false;
             this.dgvAppointments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvAppointments.Location = new System.Drawing.Point(12, 12);
-            this.dgvAppointments.MultiSelect = false;
+            this.dgvAppointments.Location = new System.Drawing.Point(12, 50);
             this.dgvAppointments.Name = "dgvAppointments";
-            this.dgvAppointments.ReadOnly = true;
-            this.dgvAppointments.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvAppointments.Size = new System.Drawing.Size(760, 387);
+            this.dgvAppointments.Size = new System.Drawing.Size(776, 350);
             this.dgvAppointments.TabIndex = 0;
             // 
-            // btnAdd
+            // btnAllAppointments
             // 
-            this.btnAdd.Location = new System.Drawing.Point(12, 405);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(75, 23);
-            this.btnAdd.TabIndex = 1;
-            this.btnAdd.Text = "Add";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnAllAppointments.Location = new System.Drawing.Point(12, 12);
+            this.btnAllAppointments.Name = "btnAllAppointments";
+            this.btnAllAppointments.Size = new System.Drawing.Size(150, 23);
+            this.btnAllAppointments.TabIndex = 1;
+            this.btnAllAppointments.Text = "All Appointments";
+            this.btnAllAppointments.UseVisualStyleBackColor = true;
+            this.btnAllAppointments.Click += new System.EventHandler(this.btnAllAppointments_Click);
             // 
-            // btnEdit
+            // btnCurrentWeek
             // 
-            this.btnEdit.Location = new System.Drawing.Point(93, 405);
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(75, 23);
-            this.btnEdit.TabIndex = 2;
-            this.btnEdit.Text = "Edit";
-            this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            this.btnCurrentWeek.Location = new System.Drawing.Point(180, 12);
+            this.btnCurrentWeek.Name = "btnCurrentWeek";
+            this.btnCurrentWeek.Size = new System.Drawing.Size(150, 23);
+            this.btnCurrentWeek.TabIndex = 2;
+            this.btnCurrentWeek.Text = "Current Week";
+            this.btnCurrentWeek.UseVisualStyleBackColor = true;
+            this.btnCurrentWeek.Click += new System.EventHandler(this.btnCurrentWeek_Click);
             // 
-            // btnDelete
+            // btnCurrentMonth
             // 
-            this.btnDelete.Location = new System.Drawing.Point(174, 405);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(75, 23);
-            this.btnDelete.TabIndex = 3;
-            this.btnDelete.Text = "Delete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            this.btnCurrentMonth.Location = new System.Drawing.Point(348, 12);
+            this.btnCurrentMonth.Name = "btnCurrentMonth";
+            this.btnCurrentMonth.Size = new System.Drawing.Size(150, 23);
+            this.btnCurrentMonth.TabIndex = 3;
+            this.btnCurrentMonth.Text = "Current Month";
+            this.btnCurrentMonth.UseVisualStyleBackColor = true;
+            this.btnCurrentMonth.Click += new System.EventHandler(this.btnCurrentMonth_Click);
+            // 
+            // btnAddAppointment
+            // 
+            this.btnAddAppointment.Location = new System.Drawing.Point(538, 12);
+            this.btnAddAppointment.Name = "btnAddAppointment";
+            this.btnAddAppointment.Size = new System.Drawing.Size(75, 23);
+            this.btnAddAppointment.TabIndex = 4;
+            this.btnAddAppointment.Text = "Add";
+            this.btnAddAppointment.UseVisualStyleBackColor = true;
+            this.btnAddAppointment.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnEditAppointment
+            // 
+            this.btnEditAppointment.Location = new System.Drawing.Point(619, 12);
+            this.btnEditAppointment.Name = "btnEditAppointment";
+            this.btnEditAppointment.Size = new System.Drawing.Size(75, 23);
+            this.btnEditAppointment.TabIndex = 5;
+            this.btnEditAppointment.Text = "Edit";
+            this.btnEditAppointment.UseVisualStyleBackColor = true;
+            this.btnEditAppointment.Click += new System.EventHandler(this.btnEdit_Click);
+            // 
+            // btnDeleteAppointment
+            // 
+            this.btnDeleteAppointment.Location = new System.Drawing.Point(700, 12);
+            this.btnDeleteAppointment.Name = "btnDeleteAppointment";
+            this.btnDeleteAppointment.Size = new System.Drawing.Size(75, 23);
+            this.btnDeleteAppointment.TabIndex = 6;
+            this.btnDeleteAppointment.Text = "Delete";
+            this.btnDeleteAppointment.UseVisualStyleBackColor = true;
+            this.btnDeleteAppointment.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // AppointmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 441);
-            this.Controls.Add(this.btnDelete);
-            this.Controls.Add(this.btnEdit);
-            this.Controls.Add(this.btnAdd);
+            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnDeleteAppointment);
+            this.Controls.Add(this.btnEditAppointment);
+            this.Controls.Add(this.btnAddAppointment);
+            this.Controls.Add(this.btnCurrentMonth);
+            this.Controls.Add(this.btnCurrentWeek);
+            this.Controls.Add(this.btnAllAppointments);
             this.Controls.Add(this.dgvAppointments);
             this.Name = "AppointmentForm";
             this.Text = "Appointment Management";
@@ -88,5 +115,13 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.DataGridView dgvAppointments;
+        private System.Windows.Forms.Button btnAllAppointments;
+        private System.Windows.Forms.Button btnCurrentWeek;
+        private System.Windows.Forms.Button btnCurrentMonth;
+        private System.Windows.Forms.Button btnAddAppointment;
+        private System.Windows.Forms.Button btnEditAppointment;
+        private System.Windows.Forms.Button btnDeleteAppointment;
     }
 }

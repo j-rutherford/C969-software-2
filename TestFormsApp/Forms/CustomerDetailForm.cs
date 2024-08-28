@@ -61,7 +61,7 @@ namespace C969App.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while saving the customer record: {ex.ToString()}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"An error occurred while saving the customer record: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
