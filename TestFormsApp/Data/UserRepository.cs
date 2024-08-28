@@ -14,17 +14,29 @@ namespace C969App.Data
             _context = context;
         }
 
-        public bool AuthenticateUser(string username, string password)
+        public (bool isAuthenticated, int userId) AuthenticateUser(string username, string password)
         {
-            string query = "SELECT COUNT(*) FROM user WHERE Username = @username AND Password = @password";
+            string query = "SELECT UserId FROM user WHERE Username = @username AND Password = @password";
             using (var command = new MySqlCommand(query, _context.Connection))
             {
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@password", password);
-                int userCount = Convert.ToInt32(command.ExecuteScalar());
-                return userCount > 0;
+
+                // Execute the command and attempt to retrieve the UserId
+                var result = command.ExecuteScalar();
+
+                // Check if a valid UserId was returned
+                if (result != null && int.TryParse(result.ToString(), out int userId))
+                {
+                    return (true, userId); // Return true if authenticated, along with the UserId
+                }
+                else
+                {
+                    return (false, 0); // Return false if not authenticated, with UserId as 0
+                }
             }
         }
+
 
         public List<User> GetAllUsers()
         {

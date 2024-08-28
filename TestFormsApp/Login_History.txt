@@ -1,2 +1,7 @@
 Failed Login Attempt with USER tge at 8/28/2024 5:04:39 AM.
 USER test has logged in at 8/28/2024 5:15:21 AM.
+Failed Login Attempt with USER test at 8/28/2024 5:37:12 AM.
+Failed Login Attempt with USER test at 8/28/2024 5:38:11 AM.
+Failed Login Attempt with USER test at 8/28/2024 5:47:22 AM.
+USER test has logged in at 8/28/2024 5:48:33 AM.
+USER consultant2 has logged in at 8/28/2024 5:50:34 AM.

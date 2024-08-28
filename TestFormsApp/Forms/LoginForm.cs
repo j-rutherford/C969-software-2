@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Resources;
 using System.Threading;
 using System.Windows.Forms;
@@ -11,14 +12,16 @@ namespace C969App.Forms
     public partial class LoginForm : Form
     {
         private readonly UserRepository _userRepository;
+        private readonly AppointmentRepository _appointmentRepository;
         private readonly Func<Form> _mainFormFactory;
         private ResourceManager _resourceManager;
 
-        public LoginForm(UserRepository userRepository, Func<Form> mainFormFactory)
+        public LoginForm(UserRepository userRepository, Func<Form> mainFormFactory, AppointmentRepository appointmentRepository)
         {
             InitializeComponent();
             _userRepository = userRepository;
             _mainFormFactory = mainFormFactory;
+            _appointmentRepository = appointmentRepository;
 
             // Set the culture to the current user's environment language
             SetCulture(CultureInfo.CurrentUICulture);
@@ -46,10 +49,14 @@ namespace C969App.Forms
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            bool isAuthenticated = _userRepository.AuthenticateUser(txtUsername.Text, txtPassword.Text);
+            // Adjust AuthenticateUser to return a tuple (isAuthenticated, userId)
+            var (isAuthenticated, userId) = _userRepository.AuthenticateUser(txtUsername.Text, txtPassword.Text);
             LogLoginAttempt(txtUsername.Text, isAuthenticated);
+
             if (isAuthenticated)
             {
+                // Check for upcoming appointments within the next 15 minutes
+                CheckForUpcomingAppointments(userId);
 
                 MessageBox.Show(_resourceManager.GetString("LoginSuccess"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Hide(); // Hide the login form
@@ -59,10 +66,38 @@ namespace C969App.Forms
             }
             else
             {
-
                 MessageBox.Show(_resourceManager.GetString("ErrorLoginFailed"), _resourceManager.GetString("LoginFailedTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        // Method to check for upcoming appointments
+        private void CheckForUpcomingAppointments(int userId)
+        {
+            // Calculate the time window: current time and 15 minutes from now in UTC
+            DateTime now = DateTime.UtcNow;
+            DateTime fifteenMinutesFromNow = now.AddMinutes(15);
+
+            // Query to check for appointments within the next 15 minutes for the logged-in user
+            var upcomingAppointments = _appointmentRepository.GetAppointmentsByUser(userId)
+                .Where(appointment => appointment.Start >= now && appointment.Start <= fifteenMinutesFromNow)
+                .ToList();
+
+            // If there are upcoming appointments, show an alert
+            if (upcomingAppointments.Any())
+            {
+                foreach (var appointment in upcomingAppointments)
+                {
+                    MessageBox.Show($"You have an upcoming appointment:\n\n" +
+                                    $"Customer: {appointment.CustomerName}\n" +
+                                    $"Type: {appointment.Type}\n" +
+                                    $"Time: {appointment.Start.ToLocalTime():g}", // Display in local time
+                                    "Upcoming Appointment Alert",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Information);
+                }
+            }
+        }
+
 
         private void LogLoginAttempt(string username, bool isSuccess)
         {
