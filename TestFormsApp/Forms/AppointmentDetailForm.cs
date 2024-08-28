@@ -155,6 +155,12 @@ namespace C969App.Forms
                 return false;
             }
 
+            // Check for weekend appointments
+            if (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
+            {
+                MessageBox.Show("Appointments can only be scheduled Monday through Friday.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
             return true;
         }
 
