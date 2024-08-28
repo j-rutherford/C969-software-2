@@ -38,5 +38,10 @@ namespace C969App.Forms
             var appointmentForm = new AppointmentForm(_appointmentRepository,_customerRepository, _userRepository);
             appointmentForm.Show();
         }
+        private void btnReports_Click(object sender, EventArgs e)
+        {
+            var ReportForm = new ReportForm(_appointmentRepository, _userRepository, _customerRepository);
+            ReportForm.Show();
+        }
     }
 }

@@ -180,6 +180,26 @@ namespace C969App.Data
             }
             return appointments;
         }
+        public DataTable GetMonthlyAppointmentReport()
+        {
+            var dataTable = new DataTable();
+            var query = @"
+                SELECT 
+                    DATE_FORMAT(Start, '%Y-%m') AS Month, 
+                    Type, 
+                    COUNT(*) AS Count
+                FROM appointment
+                GROUP BY Month, Type
+                ORDER BY Month, Type";
+
+            using (var dataAdapter = new MySqlDataAdapter(query, _context.Connection))
+            {
+                dataAdapter.Fill(dataTable);
+            }
+
+            return dataTable;
+        }
+
 
     }
 }

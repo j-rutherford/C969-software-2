@@ -154,6 +154,7 @@ namespace C969App.Forms
 
             if (startDate.HasValue && endDate.HasValue)
             {
+                //Lamda required for linq query, creates row as an on-the-fly parameter
                 var filteredAppointments = appointments.AsEnumerable()
                     .Where(row => row.Field<DateTime>("AppointmentDate") >= startDate.Value && row.Field<DateTime>("AppointmentDate") <= endDate.Value);
 

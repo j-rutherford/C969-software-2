@@ -7,23 +7,24 @@ namespace C969App.Data
     public class DbContext : IDisposable
     {
         private readonly string connectionString;
-        private MySqlConnection connection;
+        private MySqlConnection _connection;
 
         public DbContext()
         {
             connectionString = ConfigurationManager.ConnectionStrings["localdb"].ConnectionString;
-            connection = new MySqlConnection(connectionString);
-            connection.Open();
+            _connection = new MySqlConnection(connectionString);
+            _connection.Open();
         }
 
-        public MySqlConnection Connection => connection;
+        //Lambda used for expression body, saves space. Returns the private connection.
+        public MySqlConnection Connection => _connection;
 
         public void Dispose()
         {
-            if (connection != null)
+            if (_connection != null)
             {
-                connection.Close();
-                connection.Dispose();
+                _connection.Close();
+                _connection.Dispose();
             }
         }
     }

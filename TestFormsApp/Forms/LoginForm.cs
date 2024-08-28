@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Resources;
 using System.Threading;
 using System.Windows.Forms;
@@ -46,9 +47,10 @@ namespace C969App.Forms
         private void btnLogin_Click(object sender, EventArgs e)
         {
             bool isAuthenticated = _userRepository.AuthenticateUser(txtUsername.Text, txtPassword.Text);
-
+            LogLoginAttempt(txtUsername.Text, isAuthenticated);
             if (isAuthenticated)
             {
+
                 MessageBox.Show(_resourceManager.GetString("LoginSuccess"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Hide(); // Hide the login form
 
@@ -57,7 +59,40 @@ namespace C969App.Forms
             }
             else
             {
+
                 MessageBox.Show(_resourceManager.GetString("ErrorLoginFailed"), _resourceManager.GetString("LoginFailedTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LogLoginAttempt(string username, bool isSuccess)
+        {
+            try
+            {
+                string logFilePath = "../../Login_History.txt";
+
+                // Check if the file exists, create it if it doesn't
+                if (!File.Exists(logFilePath))
+                {
+                    File.Create(logFilePath).Dispose(); // Create and release the file handle immediately
+                }
+
+                string logEntry;
+
+                if (isSuccess)
+                {
+                    logEntry = $"USER {username} has logged in at {DateTime.UtcNow}.";
+                }
+                else
+                {
+                    logEntry = $"Failed Login Attempt with USER {username} at {DateTime.UtcNow}.";
+                }
+
+                // Append the log entry to the file
+                File.AppendAllText(logFilePath, logEntry + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to log login attempt: {ex.Message}", "Logging Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }

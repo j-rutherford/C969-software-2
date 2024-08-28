@@ -121,6 +121,18 @@
     <Compile Include="Forms\AppointmentForm.Designer.cs">
       <DependentUpon>AppointmentForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ConsultantScheduleForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ConsultantScheduleForm.Designer.cs">
+      <DependentUpon>ConsultantScheduleForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CustomerActivityReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CustomerActivityReportForm.Designer.cs">
+      <DependentUpon>CustomerActivityReportForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\CustomerDetailForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -144,6 +156,18 @@
     </Compile>
     <Compile Include="Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\MonthlyReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MonthlyReportForm.Designer.cs">
+      <DependentUpon>MonthlyReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ReportForm.Designer.cs">
+      <DependentUpon>ReportForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Models\Appointment.cs" />
     <Compile Include="Models\Customer.cs" />

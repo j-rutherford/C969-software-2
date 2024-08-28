@@ -18,7 +18,7 @@ namespace C969App
                 var userRepository = new UserRepository(dbContext);
                 var customerRepository = new CustomerRepository(dbContext);
                 var appointmentRepository = new AppointmentRepository(dbContext);
-
+                //using anonymous function to defer the creation of the main form instance until we actually need it.
                 var loginForm = new LoginForm(userRepository, () => new MainForm(customerRepository, appointmentRepository, userRepository));
                 Application.Run(loginForm);
             }
